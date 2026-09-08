@@ -1,0 +1,78 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import CapaPagina from '../../components/CapaPagina.astro'
+import { richTextParaHtml } from '../../lib/richText'
+
+const PAYLOAD_URL = import.meta.env.PAYLOAD_URL || 'http://localhost:3000'
+const { slug } = Astro.params
+
+let area: any = null
+
+try {
+  const res = await fetch(`${PAYLOAD_URL}/api/areas-actuacao?where[slug][equals]=${slug}&depth=1`)
+  const dados = await res.json()
+  area = dados.docs?.[0] || null
+} catch (erro) {
+  console.error('Erro ao ligar ao Payload:', erro)
+}
+
+if (!area) {
+  return Astro.redirect('/areas')
+}
+
+const descricaoHtml = richTextParaHtml(area.descricaoCompleta)
+export const prerender = false
+---
+
+<Layout titulo={area.nome}>
+  <CapaPagina titulo={area.nome} eyebrow="Área de Actuação" imagem={area.icone} />
+
+  <section class="secao-conteudo">
+    <div class="container container-estreito">
+      {descricaoHtml ? (
+        <div class="texto-rico" set:html={descricaoHtml} />
+      ) : (
+        <p class="texto-rico">{area.descricaoCurta}</p>
+      )}
+
+      <a href="/areas" class="link-voltar">← Ver todas as áreas</a>
+    </div>
+  </section>
+</Layout>
+
+<style>
+  .secao-conteudo {
+    padding: 4.5rem 0;
+  }
+
+  .container-estreito {
+    max-width: 780px;
+  }
+
+  .texto-rico {
+    color: var(--cor-texto-suave);
+    font-size: 1.05rem;
+    line-height: 1.75;
+  }
+
+  .texto-rico p {
+    margin-bottom: 1rem;
+    max-width: none;
+  }
+
+  .texto-rico ul,
+  .texto-rico ol {
+    margin: 0 0 1rem 1.25rem;
+  }
+
+  .texto-rico li {
+    margin-bottom: 0.4rem;
+  }
+
+  .link-voltar {
+    display: inline-block;
+    margin-top: 2.5rem;
+    font-weight: 700;
+    color: var(--cor-vermelho);
+  }
+</style>

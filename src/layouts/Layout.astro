@@ -1,0 +1,269 @@
+---
+import '../styles/global.css'
+import IconeRede from '../components/IconeRede.astro'
+import BannerCookies from '../components/BannerCookies.astro'
+
+interface Props {
+  titulo?: string
+  descricao?: string
+}
+
+const { titulo = 'Início', descricao = 'ASSEF — Associação Solidária Esperança para o Futuro' } = Astro.props
+
+const PAYLOAD_URL = import.meta.env.PAYLOAD_URL || 'http://localhost:3000'
+
+let redesSociais: any[] = []
+let mostrarEquipa = false
+
+try {
+  const res = await fetch(`${PAYLOAD_URL}/api/globals/configuracoes`)
+  const dados = await res.json()
+  redesSociais = dados?.redesSociais || []
+  mostrarEquipa = dados?.paginasActivas?.mostrarEquipa === true
+} catch (erro) {
+  console.error('Erro ao ligar ao Payload:', erro)
+}
+
+const nomesPlataforma: Record<string, string> = {
+  facebook: 'Facebook',
+  instagram: 'Instagram',
+  linkedin: 'LinkedIn',
+  youtube: 'YouTube',
+  x: 'X (Twitter)',
+  whatsapp: 'WhatsApp',
+  tiktok: 'TikTok',
+}
+
+const linksNav = [
+  { nome: 'Início', href: '/' },
+  { nome: 'Sobre Nós', href: '/sobre' },
+  { nome: 'Áreas de Actuação', href: '/areas' },
+  ...(mostrarEquipa ? [{ nome: 'Equipa', href: '/equipa' }] : []),
+  { nome: 'Publicações', href: '/publicacoes' },
+  { nome: 'Contactos', href: '/contactos' },
+]
+---
+
+<!doctype html>
+<html lang="pt">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <title>{titulo} | ASSEF</title>
+    <meta name="description" content={descricao} />
+  </head>
+  <body>
+    <header class="cabecalho">
+      <div class="container cabecalho-conteudo">
+        <a href="/" class="logo-link">
+          <img src="/logo-claro.png" alt="ASSEF" class="logo-img" />
+        </a>
+        <nav class="nav-principal">
+          <ul>
+            {linksNav.map((link) => (
+              <li><a href={link.href}>{link.nome}</a></li>
+            ))}
+          </ul>
+        </nav>
+        <a href="/contactos" class="botao botao-nav">Contacte-nos</a>
+      </div>
+    </header>
+
+    <main>
+      <slot />
+    </main>
+
+    <footer class="rodape">
+      <div class="container rodape-conteudo">
+        <div class="rodape-marca">
+          <img src="/logo-escuro.png" alt="ASSEF" class="rodape-logo" />
+          <p class="rodape-slogan">Associação Solidária Esperança para o Futuro</p>
+
+          {redesSociais.length > 0 && (
+            <div class="rodape-redes">
+              {redesSociais.map((rede: any) => {
+                const nomeRede = nomesPlataforma[rede.plataforma] || rede.plataforma
+                return (
+                  <a href={rede.link} target="_blank" rel="noopener" class="rodape-rede-link" aria-label={nomeRede} title={nomeRede}>
+                    <IconeRede plataforma={rede.plataforma} />
+                  </a>
+                )
+              })}
+            </div>
+          )}
+        </div>
+
+        <nav class="rodape-links">
+          <h4>Navegação</h4>
+          <ul>
+            {linksNav.map((link) => (
+              <li><a href={link.href}>{link.nome}</a></li>
+            ))}
+          </ul>
+        </nav>
+
+        <div class="rodape-contacto">
+          <h4>Contacto</h4>
+          <p>Beira, Sofala, Moçambique</p>
+        </div>
+      </div>
+      <div class="container">
+        <p class="rodape-copyright">&copy; {new Date().getFullYear()} ASSEF. Todos os direitos reservados.</p>
+      </div>
+    </footer>
+
+    <BannerCookies />
+
+    <style>
+      .cabecalho {
+        border-bottom: 1px solid var(--cor-borda);
+        padding: 1.1rem 0;
+        position: sticky;
+        top: 0;
+        background: var(--cor-fundo);
+        z-index: 50;
+      }
+
+      .cabecalho-conteudo {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1.5rem;
+      }
+
+      .logo-img {
+        height: 46px;
+        width: auto;
+      }
+
+      .nav-principal ul {
+        display: flex;
+        list-style: none;
+        gap: 2rem;
+      }
+
+      .nav-principal a {
+        font-weight: 500;
+        font-size: 0.95rem;
+        color: var(--cor-texto);
+        transition: color 0.15s ease;
+      }
+
+      .nav-principal a:hover {
+        color: var(--cor-vermelho);
+      }
+
+      .botao-nav {
+        padding: 0.65rem 1.4rem;
+        font-size: 0.9rem;
+        white-space: nowrap;
+      }
+
+      .rodape {
+        background-color: var(--cor-escuro);
+        color: var(--cor-creme);
+        padding: 3.5rem 0 1.5rem 0;
+        margin-top: 5rem;
+      }
+
+      .rodape-conteudo {
+        display: grid;
+        grid-template-columns: 2fr 1fr 1fr;
+        gap: 2.5rem;
+        padding-bottom: 2.5rem;
+        border-bottom: 1px solid rgba(237, 230, 214, 0.15);
+      }
+
+      .rodape-logo {
+        height: 40px;
+        width: auto;
+        margin-bottom: 0.75rem;
+      }
+
+      .rodape-slogan {
+        color: rgba(237, 230, 214, 0.7);
+        font-size: 0.9rem;
+        max-width: 32ch;
+        margin-bottom: 1.25rem;
+      }
+
+      .rodape-redes {
+        display: flex;
+        gap: 0.65rem;
+      }
+
+      .rodape-rede-link {
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(237, 230, 214, 0.08);
+        border: 1px solid rgba(237, 230, 214, 0.2);
+        color: var(--cor-creme);
+      }
+
+      .rodape-rede-link svg {
+        width: 16px;
+        height: 16px;
+      }
+
+      .rodape-rede-link:hover {
+        background: var(--gradiente-assef);
+        border-color: transparent;
+        color: #FFFFFF;
+      }
+
+      .rodape h4 {
+        font-size: 0.95rem;
+        margin-bottom: 1rem;
+        color: #FFFFFF;
+      }
+
+      .rodape-links ul {
+        list-style: none;
+        display: flex;
+        flex-direction: column;
+        gap: 0.6rem;
+      }
+
+      .rodape-links a {
+        color: rgba(237, 230, 214, 0.75);
+        font-size: 0.9rem;
+      }
+
+      .rodape-links a:hover {
+        color: var(--cor-dourado);
+      }
+
+      .rodape-contacto p {
+        color: rgba(237, 230, 214, 0.75);
+        font-size: 0.9rem;
+      }
+
+      .rodape-copyright {
+        padding-top: 1.5rem;
+        font-size: 0.8rem;
+        color: rgba(237, 230, 214, 0.5);
+      }
+
+      @media (max-width: 860px) {
+        .nav-principal {
+          display: none;
+        }
+
+        .rodape-conteudo {
+          grid-template-columns: 1fr;
+          gap: 2rem;
+        }
+      }
+    </style>
+  </body>
+</html>

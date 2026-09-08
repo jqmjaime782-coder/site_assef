@@ -1,0 +1,101 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import CapaPagina from '../../components/CapaPagina.astro'
+
+const PAYLOAD_URL = import.meta.env.PAYLOAD_URL || 'http://localhost:3000'
+
+let areas: any[] = []
+
+try {
+  const res = await fetch(`${PAYLOAD_URL}/api/areas-actuacao?limit=100&depth=1`)
+  const dados = await res.json()
+  areas = dados.docs || []
+} catch (erro) {
+  console.error('Erro ao ligar ao Payload:', erro)
+}
+---
+
+<Layout titulo="Áreas de Actuação">
+  <CapaPagina titulo="Áreas de Actuação" eyebrow="O que fazemos" />
+
+  <section class="secao-conteudo">
+    <div class="container">
+      {areas.length > 0 ? (
+        <div class="grelha-areas">
+          {areas.map((area: any) => (
+            <a href={`/areas/${area.slug}`} class="cartao-area">
+              <div class="cartao-area-imagem placeholder-imagem">
+                {area.icone ? (
+                  <img
+                    src={area.icone.url}
+                    alt={area.icone.alt || area.nome}
+                    style={`object-position: ${area.icone.focalX ?? 50}% ${area.icone.focalY ?? 50}%`}
+                  />
+                ) : (
+                  '[ imagem ]'
+                )}
+              </div>
+              <h3>{area.nome}</h3>
+              <p>{area.descricaoCurta}</p>
+              <span class="cartao-link">Saber mais →</span>
+            </a>
+          ))}
+        </div>
+      ) : (
+        <p class="aviso-vazio">As áreas de actuação vão aparecer aqui assim que forem adicionadas no painel de administração.</p>
+      )}
+    </div>
+  </section>
+</Layout>
+
+<style>
+  .secao-conteudo {
+    padding: 4.5rem 0;
+  }
+
+  .grelha-areas {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2.5rem;
+  }
+
+  .cartao-area {
+    display: block;
+  }
+
+  .cartao-area-imagem {
+    aspect-ratio: 4 / 3;
+    margin-bottom: 1.25rem;
+    font-size: 0.85rem;
+    overflow: hidden;
+  }
+
+  .cartao-area-imagem img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .cartao-area h3 {
+    font-size: 1.3rem;
+    margin-bottom: 0.5rem;
+    color: var(--cor-texto);
+  }
+
+  .cartao-area p {
+    color: var(--cor-texto-suave);
+    font-size: 0.98rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .cartao-link {
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: var(--cor-vermelho);
+  }
+
+  .aviso-vazio {
+    color: var(--cor-texto-suave);
+    font-style: italic;
+  }
+</style>

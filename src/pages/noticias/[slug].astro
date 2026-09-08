@@ -1,0 +1,90 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import CapaPagina from '../../components/CapaPagina.astro'
+import { richTextParaHtml } from '../../lib/richText'
+
+const PAYLOAD_URL = import.meta.env.PAYLOAD_URL || 'http://localhost:3000'
+const { slug } = Astro.params
+
+let noticia: any = null
+
+try {
+  const res = await fetch(`${PAYLOAD_URL}/api/noticias?where[slug][equals]=${slug}&depth=1`)
+  const dados = await res.json()
+  noticia = dados.docs?.[0] || null
+} catch (erro) {
+  console.error('Erro ao ligar ao Payload:', erro)
+}
+
+if (!noticia) {
+  return Astro.redirect('/publicacoes')
+}
+
+function formatarData(dataISO: string): string {
+  if (!dataISO) return ''
+  const data = new Date(dataISO)
+  return data.toLocaleDateString('pt-PT', { day: '2-digit', month: 'long', year: 'numeric' })
+}
+
+const conteudoHtml = richTextParaHtml(noticia.conteudo)
+export const prerender = false
+---
+
+<Layout titulo={noticia.titulo}>
+  <CapaPagina
+    titulo={noticia.titulo}
+    eyebrow={noticia.tipo === 'evento' ? 'Evento' : 'Notícia'}
+    imagem={noticia.capa}
+  />
+
+  <section class="secao-conteudo">
+    <div class="container container-estreito">
+      <p class="data-publicacao">{formatarData(noticia.data)}</p>
+
+      {conteudoHtml ? (
+        <div class="texto-rico" set:html={conteudoHtml} />
+      ) : (
+        <p class="texto-rico">{noticia.resumo}</p>
+      )}
+
+      <a href="/publicacoes" class="link-voltar">← Ver todas as notícias</a>
+    </div>
+  </section>
+</Layout>
+
+<style>
+  .secao-conteudo {
+    padding: 4rem 0;
+  }
+
+  .container-estreito {
+    max-width: 780px;
+  }
+
+  .data-publicacao {
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--cor-vermelho);
+    margin-bottom: 1.5rem;
+  }
+
+  .texto-rico {
+    color: var(--cor-texto-suave);
+    font-size: 1.05rem;
+    line-height: 1.75;
+  }
+
+  .texto-rico p {
+    margin-bottom: 1rem;
+    max-width: none;
+  }
+
+  .link-voltar {
+    display: inline-block;
+    margin-top: 2.5rem;
+    font-weight: 700;
+    color: var(--cor-vermelho);
+  }
+</style>

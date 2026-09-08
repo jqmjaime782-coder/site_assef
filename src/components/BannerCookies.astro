@@ -1,0 +1,125 @@
+---
+---
+
+<div class="banner-cookies" data-banner-cookies hidden>
+  <div class="banner-cookies-conteudo">
+    <p>
+      Este site utiliza cookies para melhorar a tua experiência de navegação. Ao continuares, aceitas a nossa utilização de cookies.
+    </p>
+    <div class="banner-cookies-botoes">
+      <button type="button" class="botao-cookies botao-recusar" data-cookies-recusar>Recusar</button>
+      <button type="button" class="botao-cookies botao-aceitar" data-cookies-aceitar>Aceitar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const CHAVE_CONSENTIMENTO = 'assef-cookies-consentimento'
+
+  const banner = document.querySelector<HTMLElement>('[data-banner-cookies]')
+  const botaoAceitar = document.querySelector<HTMLElement>('[data-cookies-aceitar]')
+  const botaoRecusar = document.querySelector<HTMLElement>('[data-cookies-recusar]')
+
+  function esconderBanner() {
+    banner?.setAttribute('hidden', '')
+  }
+
+  function mostrarBanner() {
+    banner?.removeAttribute('hidden')
+  }
+
+  const escolhaGuardada = localStorage.getItem(CHAVE_CONSENTIMENTO)
+
+  if (!escolhaGuardada) {
+    mostrarBanner()
+  }
+
+  botaoAceitar?.addEventListener('click', () => {
+    localStorage.setItem(CHAVE_CONSENTIMENTO, 'aceite')
+    esconderBanner()
+  })
+
+  botaoRecusar?.addEventListener('click', () => {
+    localStorage.setItem(CHAVE_CONSENTIMENTO, 'recusado')
+    esconderBanner()
+  })
+</script>
+
+<style>
+  .banner-cookies {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 100;
+    background: var(--cor-escuro);
+    border-top: 3px solid transparent;
+    border-image: var(--gradiente-assef) 1;
+    padding: 1.25rem 1.5rem;
+  }
+
+  .banner-cookies-conteudo {
+    max-width: 1180px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 2rem;
+    flex-wrap: wrap;
+  }
+
+  .banner-cookies-conteudo p {
+    color: var(--cor-creme);
+    font-size: 0.9rem;
+    line-height: 1.5;
+    max-width: 60ch;
+    margin: 0;
+  }
+
+  .banner-cookies-botoes {
+    display: flex;
+    gap: 0.75rem;
+    flex-shrink: 0;
+  }
+
+  .botao-cookies {
+    padding: 0.65rem 1.4rem;
+    font-family: var(--fonte-corpo);
+    font-weight: 600;
+    font-size: 0.9rem;
+    border: none;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  .botao-recusar {
+    background: transparent;
+    border: 1.5px solid rgba(237, 230, 214, 0.4);
+    color: var(--cor-creme);
+  }
+
+  .botao-recusar:hover {
+    border-color: var(--cor-creme);
+  }
+
+  .botao-aceitar {
+    background: var(--gradiente-assef);
+    color: #FFFFFF;
+  }
+
+  .botao-aceitar:hover {
+    opacity: 0.9;
+  }
+
+  @media (max-width: 700px) {
+    .banner-cookies-conteudo {
+      flex-direction: column;
+      align-items: stretch;
+      text-align: center;
+    }
+
+    .banner-cookies-botoes {
+      justify-content: center;
+    }
+  }
+</style>

@@ -1,0 +1,416 @@
+---
+import Layout from '../layouts/Layout.astro'
+import CapaPagina from '../components/CapaPagina.astro'
+import IconeRede from '../components/IconeRede.astro'
+
+const PAYLOAD_URL = import.meta.env.PAYLOAD_URL || 'http://localhost:3000'
+const WEB3FORMS_KEY = import.meta.env.PUBLIC_WEB3FORMS_KEY || ''
+
+let configuracoes: any = null
+
+try {
+  const res = await fetch(`${PAYLOAD_URL}/api/globals/configuracoes?depth=1`)
+  configuracoes = await res.json()
+} catch (erro) {
+  console.error('Erro ao ligar ao Payload:', erro)
+}
+
+const endereco = configuracoes?.endereco || ''
+const telefone = configuracoes?.telefone || ''
+const email = configuracoes?.email || ''
+const redesSociais = configuracoes?.redesSociais || []
+
+const nomesPlataforma: Record<string, string> = {
+  facebook: 'Facebook',
+  instagram: 'Instagram',
+  linkedin: 'LinkedIn',
+  youtube: 'YouTube',
+  x: 'X (Twitter)',
+  whatsapp: 'WhatsApp',
+  tiktok: 'TikTok',
+}
+---
+
+<Layout titulo="Contactos">
+  <CapaPagina titulo="Contactos" eyebrow="Fale Connosco" />
+
+  <section class="secao-conteudo">
+    <div class="container grelha-contactos">
+      <div class="coluna-info">
+        <p class="rotulo-secao">Estamos aqui para ajudar</p>
+        <h2>Vamos conversar</h2>
+        <div class="linha-destaque-titulo"></div>
+        <p class="texto-intro">
+          Estamos disponíveis para responder às tuas questões, parcerias ou pedidos de informação.
+        </p>
+
+        <div class="lista-info">
+          {endereco && (
+            <div class="item-info">
+              <div class="item-info-icone">
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M12 21s-7-6.5-7-11.5A7 7 0 0 1 19 9.5C19 14.5 12 21 12 21z" stroke="white" stroke-width="1.5"></path>
+                  <circle cx="12" cy="9.5" r="2.5" stroke="white" stroke-width="1.5"></circle>
+                </svg>
+              </div>
+              <div>
+                <p class="item-info-rotulo">Endereço</p>
+                <p class="item-info-valor">{endereco}</p>
+              </div>
+            </div>
+          )}
+
+          {telefone && (
+            <div class="item-info">
+              <div class="item-info-icone">
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" stroke="white" stroke-width="1.5"></path>
+                </svg>
+              </div>
+              <div>
+                <p class="item-info-rotulo">Telefone</p>
+                <p class="item-info-valor"><a href={`tel:${telefone}`}>{telefone}</a></p>
+              </div>
+            </div>
+          )}
+
+          {email && (
+            <div class="item-info">
+              <div class="item-info-icone">
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M4 4h16v16H4z" stroke="white" stroke-width="1.5"></path>
+                  <path d="M4 6l8 7 8-7" stroke="white" stroke-width="1.5"></path>
+                </svg>
+              </div>
+              <div>
+                <p class="item-info-rotulo">Email</p>
+                <p class="item-info-valor"><a href={`mailto:${email}`}>{email}</a></p>
+              </div>
+            </div>
+          )}
+
+          {!endereco && !telefone && !email && (
+            <p class="aviso-vazio">Preenche os dados de contacto no painel de administração (Configurações do Site) para aparecerem aqui.</p>
+          )}
+        </div>
+
+        {redesSociais.length > 0 && (
+          <div class="redes-sociais">
+            <p class="item-info-rotulo">Redes Sociais</p>
+            <div class="redes-lista">
+              {redesSociais.map((rede: any) => {
+                const nomeRede = nomesPlataforma[rede.plataforma] || rede.plataforma
+                return (
+                  <a href={rede.link} target="_blank" rel="noopener" class="rede-link" aria-label={nomeRede} title={nomeRede}>
+                    <IconeRede plataforma={rede.plataforma} />
+                  </a>
+                )
+              })}
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div class="coluna-formulario">
+        <form class="formulario-contacto" data-formulario-contacto>
+          <input type="hidden" name="access_key" value={WEB3FORMS_KEY} />
+          <input type="hidden" name="subject" value="Nova mensagem do site da ASSEF" />
+          <input type="checkbox" name="botcheck" class="campo-anti-spam" tabindex="-1" autocomplete="off" />
+
+          <div class="campo">
+            <label for="nome">Nome</label>
+            <input type="text" id="nome" name="name" required />
+          </div>
+          <div class="campo">
+            <label for="email-contacto">Email</label>
+            <input type="email" id="email-contacto" name="email" required />
+          </div>
+          <div class="campo">
+            <label for="assunto">Assunto</label>
+            <input type="text" id="assunto" name="assunto" required />
+          </div>
+          <div class="campo">
+            <label for="mensagem">Mensagem</label>
+            <textarea id="mensagem" name="message" rows="5" required></textarea>
+          </div>
+          <button type="submit" class="botao-formulario" data-botao-enviar>Enviar Mensagem</button>
+          <p class="formulario-nota" data-formulario-nota></p>
+        </form>
+      </div>
+    </div>
+  </section>
+</Layout>
+
+<script>
+  const formulario = document.querySelector<HTMLFormElement>('[data-formulario-contacto]')
+  const nota = document.querySelector<HTMLElement>('[data-formulario-nota]')
+  const botaoEnviar = document.querySelector<HTMLButtonElement>('[data-botao-enviar]')
+
+  formulario?.addEventListener('submit', async (evento) => {
+    evento.preventDefault()
+
+    if (!nota || !botaoEnviar) return
+
+    botaoEnviar.disabled = true
+    botaoEnviar.textContent = 'A enviar...'
+    nota.classList.remove('visivel', 'erro')
+
+    const dados = new FormData(formulario)
+
+    try {
+      const resposta = await fetch('https://api.web3forms.com/submit', {
+        method: 'POST',
+        headers: { Accept: 'application/json' },
+        body: dados,
+      })
+
+      const resultado = await resposta.json()
+
+      if (resultado.success) {
+        nota.textContent = 'Mensagem enviada com sucesso! Entraremos em contacto brevemente.'
+        nota.classList.add('visivel')
+        formulario.reset()
+      } else {
+        throw new Error(resultado.message || 'Erro desconhecido do servidor')
+      }
+    } catch (erro) {
+      const mensagemErro = erro instanceof Error ? erro.message : 'Erro desconhecido'
+      nota.textContent = `Não foi possível enviar: ${mensagemErro}`
+      nota.classList.add('visivel', 'erro')
+      console.error('Erro Web3Forms:', erro)
+    } finally {
+      botaoEnviar.disabled = false
+      botaoEnviar.textContent = 'Enviar Mensagem'
+    }
+  })
+</script>
+
+<style>
+  .secao-conteudo {
+    padding: 4.5rem 0;
+  }
+
+  .grelha-contactos {
+    display: grid;
+    grid-template-columns: 1fr 1.1fr;
+    gap: 4rem;
+    align-items: start;
+  }
+
+  .rotulo-secao {
+    font-weight: 700;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--cor-vermelho);
+    margin-bottom: 0.75rem;
+  }
+
+  .coluna-info h2 {
+    font-size: 2.1rem;
+    margin-bottom: 0;
+  }
+
+  .linha-destaque-titulo {
+    height: 4px;
+    width: 70px;
+    background: var(--gradiente-assef);
+    border-radius: 2px;
+    margin: 1.1rem 0 1.5rem 0;
+  }
+
+  .texto-intro {
+    color: var(--cor-texto-suave);
+    margin-bottom: 2.5rem;
+    max-width: 42ch;
+  }
+
+  .lista-info {
+    display: flex;
+    flex-direction: column;
+    gap: 1.75rem;
+    margin-bottom: 2.5rem;
+  }
+
+  .item-info {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+
+  .item-info-icone {
+    width: 44px;
+    height: 44px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--gradiente-assef);
+    border-radius: 6px;
+  }
+
+  .item-info-icone svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .item-info-rotulo {
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--cor-texto-suave);
+    margin-bottom: 0.3rem;
+  }
+
+  .item-info-valor {
+    font-size: 1.02rem;
+    color: var(--cor-texto);
+    font-weight: 500;
+  }
+
+  .item-info-valor a {
+    color: var(--cor-texto);
+  }
+
+  .item-info-valor a:hover {
+    color: var(--cor-vermelho);
+  }
+
+  .redes-sociais {
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--cor-borda);
+  }
+
+  .redes-lista {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 0.75rem;
+  }
+
+  .rede-link {
+    width: 42px;
+    height: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--cor-fundo-secao);
+    border: 1px solid var(--cor-borda);
+    color: var(--cor-vermelho);
+  }
+
+  .rede-link svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .rede-link:hover {
+    background: var(--gradiente-assef);
+    border-color: transparent;
+    color: #FFFFFF;
+  }
+
+  .coluna-formulario {
+    background: var(--cor-fundo-secao);
+    border: 1px solid var(--cor-borda);
+    border-top: 4px solid transparent;
+    border-image: var(--gradiente-assef) 1;
+    padding: 2.5rem;
+  }
+
+  .formulario-contacto {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+
+  .campo-anti-spam {
+    position: absolute;
+    left: -9999px;
+    opacity: 0;
+  }
+
+  .campo {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .campo label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--cor-texto);
+  }
+
+  .campo input,
+  .campo textarea {
+    font-family: var(--fonte-corpo);
+    font-size: 0.98rem;
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--cor-borda);
+    background: #FFFFFF;
+    color: var(--cor-texto);
+    resize: vertical;
+  }
+
+  .campo input:focus,
+  .campo textarea:focus {
+    outline: none;
+    border-color: var(--cor-vermelho);
+  }
+
+  .botao-formulario {
+    margin-top: 0.5rem;
+    width: 100%;
+    padding: 0.9rem 1.5rem;
+    background: var(--gradiente-assef);
+    color: #FFFFFF;
+    font-family: var(--fonte-corpo);
+    font-weight: 700;
+    font-size: 1rem;
+    border: none;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: opacity 0.2s ease;
+  }
+
+  .botao-formulario:hover {
+    opacity: 0.9;
+  }
+
+  .botao-formulario:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  .formulario-nota {
+    display: none;
+    font-size: 0.9rem;
+    color: var(--cor-vermelho);
+    font-weight: 600;
+    margin-top: 0.5rem;
+  }
+
+  .formulario-nota.visivel {
+    display: block;
+    color: #2E7D32;
+  }
+
+  .formulario-nota.visivel.erro {
+    color: var(--cor-vermelho);
+  }
+
+  .aviso-vazio {
+    color: var(--cor-texto-suave);
+    font-style: italic;
+    font-size: 0.95rem;
+  }
+
+  @media (max-width: 860px) {
+    .grelha-contactos {
+      grid-template-columns: 1fr;
+      gap: 3rem;
+    }
+  }
+</style>

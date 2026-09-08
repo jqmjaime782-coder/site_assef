@@ -1,0 +1,432 @@
+---
+import Layout from '../layouts/Layout.astro'
+import CapaPagina from '../components/CapaPagina.astro'
+
+const PAYLOAD_URL = import.meta.env.PAYLOAD_URL || 'http://localhost:3000'
+
+let sobreNos: any = null
+
+try {
+  const res = await fetch(`${PAYLOAD_URL}/api/globals/sobre-nos?depth=1`)
+  sobreNos = await res.json()
+} catch (erro) {
+  console.error('Erro ao ligar ao Payload:', erro)
+}
+
+function richTextParaHtml(campo: any): string {
+  if (!campo?.root?.children) return ''
+
+  function processarNo(no: any): string {
+    if (no.type === 'text') {
+      let texto = no.text || ''
+      if (no.format & 1) texto = `<strong>${texto}</strong>`
+      if (no.format & 2) texto = `<em>${texto}</em>`
+      return texto
+    }
+    const filhos = (no.children || []).map(processarNo).join('')
+    switch (no.type) {
+      case 'paragraph':
+        return `<p>${filhos}</p>`
+      case 'heading':
+        return `<${no.tag}>${filhos}</${no.tag}>`
+      case 'list':
+        const tag = no.listType === 'number' ? 'ol' : 'ul'
+        return `<${tag}>${filhos}</${tag}>`
+      case 'listitem':
+        return `<li>${filhos}</li>`
+      default:
+        return filhos
+    }
+  }
+
+  return campo.root.children.map(processarNo).join('')
+}
+
+const quemSomosHtml = richTextParaHtml(sobreNos?.quemSomos)
+const missaoHtml = richTextParaHtml(sobreNos?.missao)
+const visaoHtml = richTextParaHtml(sobreNos?.visao)
+const valoresHtml = richTextParaHtml(sobreNos?.valores)
+const historia = sobreNos?.historia || []
+---
+
+<Layout titulo="Sobre Nós">
+  <CapaPagina titulo="Sobre Nós" eyebrow="A ASSEF" imagem={sobreNos?.capa} />
+
+  {(quemSomosHtml || missaoHtml || visaoHtml) && (
+    <section class="secao-conteudo">
+      <div class="container grelha-intro">
+        {quemSomosHtml && (
+          <div class="coluna-intro">
+            <p class="rotulo-secao">Sobre a ASSEF</p>
+            <h2>Quem Somos</h2>
+            <div class="texto-rico" set:html={quemSomosHtml} />
+          </div>
+        )}
+
+        {(missaoHtml || visaoHtml) && (
+          <div class="coluna-caixa">
+            {visaoHtml && (
+              <div class="bloco-barra">
+                <h3 class="titulo-barra">Visão</h3>
+                <div class="barra-progresso"><div class="barra-preenchida"></div></div>
+                <div class="texto-rico" set:html={visaoHtml} />
+              </div>
+            )}
+            {missaoHtml && (
+              <div class="bloco-barra">
+                <h3 class="titulo-barra">Missão</h3>
+                <div class="barra-progresso"><div class="barra-preenchida"></div></div>
+                <div class="texto-rico" set:html={missaoHtml} />
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </section>
+  )}
+
+  {valoresHtml && (
+    <section class="secao-conteudo secao-alternada">
+      <div class="container container-estreito">
+        <h3 class="titulo-barra">Valores</h3>
+        <div class="barra-progresso"><div class="barra-preenchida"></div></div>
+        <div class="texto-rico" set:html={valoresHtml} />
+      </div>
+    </section>
+  )}
+
+  {historia.length > 0 && (
+    <section class="secao-conteudo secao-historia">
+      <div class="container">
+        <p class="rotulo-secao">A Nossa História</p>
+        <h2 class="titulo-historia">Uma trajectória de compromisso</h2>
+      </div>
+
+      <div class="wrapper-timeline">
+        <div class="indicador-ano-fixo" data-indicador-ano>
+          {historia[0]?.ano || ''}
+        </div>
+
+        <div class="container">
+          <div class="timeline">
+            <div class="timeline-eixo"><div class="timeline-eixo-preenchido" data-eixo-preenchido></div></div>
+
+            {historia.map((marco: any, i: number) => (
+              <div class={`marco ${i % 2 === 0 ? 'marco-esquerda' : 'marco-direita'}`} data-marco data-ano={marco.ano}>
+                <div class="marco-ponto"></div>
+                <div class="marco-conteudo">
+                  {marco.foto && (
+                    <img
+                      src={marco.foto.url}
+                      alt={marco.foto.alt || marco.titulo}
+                      class="marco-foto"
+                      style={`object-position: ${marco.foto.focalX ?? 50}% ${marco.foto.focalY ?? 50}%`}
+                    />
+                  )}
+                  <p class="marco-ano">{marco.ano}</p>
+                  <h3 class="marco-titulo">{marco.titulo}</h3>
+                  {marco.descricao && <p class="marco-descricao">{marco.descricao}</p>}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  )}
+
+  {!quemSomosHtml && !missaoHtml && !visaoHtml && !valoresHtml && historia.length === 0 && (
+    <section class="secao-conteudo">
+      <div class="container">
+        <p class="aviso-vazio">O conteúdo desta página vai aparecer aqui assim que for preenchido no painel de administração (Sobre Nós).</p>
+      </div>
+    </section>
+  )}
+</Layout>
+
+<script>
+  const marcos = document.querySelectorAll<HTMLElement>('[data-marco]')
+  const indicador = document.querySelector<HTMLElement>('[data-indicador-ano]')
+  const eixoPreenchido = document.querySelector<HTMLElement>('[data-eixo-preenchido]')
+
+  if (marcos.length > 0) {
+    const observador = new IntersectionObserver(
+      (entradas) => {
+        entradas.forEach((entrada) => {
+          if (entrada.isIntersecting) {
+            entrada.target.classList.add('visivel')
+            const ano = entrada.target.getAttribute('data-ano')
+            if (indicador && ano) indicador.textContent = ano
+          }
+        })
+      },
+      { threshold: 0.35 }
+    )
+    marcos.forEach((marco) => observador.observe(marco))
+
+    if (eixoPreenchido) {
+      window.addEventListener('scroll', () => {
+        const ultimoVisivel = document.querySelectorAll('[data-marco].visivel')
+        if (ultimoVisivel.length > 0) {
+          const proporcao = ultimoVisivel.length / marcos.length
+          eixoPreenchido.style.height = `${proporcao * 100}%`
+        }
+      })
+    }
+  }
+</script>
+
+<style>
+  .secao-conteudo {
+    padding: 4.5rem 0;
+  }
+
+  .secao-alternada {
+    background: var(--cor-fundo-secao);
+  }
+
+  .container-estreito {
+    max-width: 780px;
+  }
+
+  .rotulo-secao {
+    font-weight: 700;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--cor-texto-suave);
+    margin-bottom: 0.75rem;
+  }
+
+  .grelha-intro {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4rem;
+    align-items: start;
+  }
+
+  .coluna-intro h2 {
+    font-size: 2rem;
+    color: var(--cor-vermelho);
+    margin-bottom: 1.25rem;
+  }
+
+  .coluna-caixa {
+    background: var(--cor-fundo-secao);
+    border: 1px solid var(--cor-borda);
+    padding: 2.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 2.5rem;
+  }
+
+  .bloco-barra:not(:last-child) {
+    padding-bottom: 2.5rem;
+    border-bottom: 1px solid var(--cor-borda);
+  }
+
+  .titulo-barra {
+    font-size: 1.3rem;
+    color: var(--cor-vermelho);
+    margin-bottom: 0.75rem;
+  }
+
+  .barra-progresso {
+    height: 4px;
+    width: 100%;
+    background: var(--cor-borda);
+    border-radius: 2px;
+    margin-bottom: 1.25rem;
+    overflow: hidden;
+  }
+
+  .barra-preenchida {
+    height: 100%;
+    width: 55%;
+    background: var(--gradiente-assef);
+    border-radius: 2px;
+  }
+
+  .texto-rico {
+    color: var(--cor-texto-suave);
+    font-size: 1.02rem;
+    line-height: 1.7;
+  }
+
+  .texto-rico p {
+    margin-bottom: 1rem;
+    max-width: none;
+  }
+
+  .texto-rico ul,
+  .texto-rico ol {
+    margin: 0 0 1rem 1.25rem;
+  }
+
+  .texto-rico li {
+    margin-bottom: 0.4rem;
+  }
+
+  .titulo-historia {
+    max-width: 40ch;
+    margin-top: 0.25rem;
+  }
+
+  .secao-historia {
+    position: relative;
+  }
+
+  .wrapper-timeline {
+    position: relative;
+  }
+
+  .indicador-ano-fixo {
+    position: sticky;
+    top: 100px;
+    float: right;
+    margin-right: max(1.5rem, calc((100% - 1180px) / 2 + 1.5rem));
+    font-family: var(--fonte-titulos);
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #FFFFFF;
+    background: var(--gradiente-assef);
+    padding: 0.6rem 1.4rem;
+    border-radius: 4px;
+    z-index: 5;
+  }
+
+  .timeline {
+    position: relative;
+    margin-top: 3rem;
+    padding-bottom: 2rem;
+  }
+
+  .timeline-eixo {
+    position: absolute;
+    left: 50%;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: var(--cor-borda);
+    transform: translateX(-50%);
+  }
+
+  .timeline-eixo-preenchido {
+    width: 100%;
+    height: 0%;
+    background: var(--gradiente-assef);
+    transition: height 0.3s ease-out;
+  }
+
+  .marco {
+    position: relative;
+    width: 50%;
+    padding: 0 3.5rem 4rem 3.5rem;
+    opacity: 0;
+    transition: opacity 0.6s ease, transform 0.6s ease;
+  }
+
+  .marco-esquerda {
+    left: 0;
+    transform: translateX(-24px);
+  }
+
+  .marco-direita {
+    left: 50%;
+    transform: translateX(24px);
+  }
+
+  .marco.visivel {
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  .marco-ponto {
+    position: absolute;
+    top: 0.25rem;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--gradiente-assef);
+    border: 3px solid var(--cor-fundo);
+    z-index: 2;
+  }
+
+  .marco-esquerda .marco-ponto {
+    right: -9px;
+  }
+
+  .marco-direita .marco-ponto {
+    left: -9px;
+  }
+
+  .marco-conteudo {
+    background: var(--cor-fundo-secao);
+    border: 1px solid var(--cor-borda);
+    padding: 1.75rem;
+  }
+
+  .marco-foto {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+    margin-bottom: 1.25rem;
+  }
+
+  .marco-ano {
+    font-weight: 700;
+    font-size: 0.85rem;
+    color: var(--cor-vermelho);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    margin-bottom: 0.4rem;
+  }
+
+  .marco-titulo {
+    font-size: 1.3rem;
+    margin-bottom: 0.6rem;
+  }
+
+  .marco-descricao {
+    color: var(--cor-texto-suave);
+    font-size: 0.98rem;
+    line-height: 1.6;
+  }
+
+  .aviso-vazio {
+    color: var(--cor-texto-suave);
+    font-style: italic;
+  }
+
+  @media (max-width: 800px) {
+    .grelha-intro {
+      grid-template-columns: 1fr;
+      gap: 2.5rem;
+    }
+
+    .indicador-ano-fixo {
+      float: none;
+      margin: 0 1.25rem 1.5rem 1.25rem;
+      display: inline-block;
+    }
+
+    .timeline-eixo {
+      left: 20px;
+    }
+
+    .marco,
+    .marco-esquerda,
+    .marco-direita {
+      width: 100%;
+      left: 0;
+      padding: 0 0 3rem 3.5rem;
+      transform: translateX(0);
+    }
+
+    .marco-esquerda .marco-ponto,
+    .marco-direita .marco-ponto {
+      left: 12px;
+      right: auto;
+    }
+  }
+</style>

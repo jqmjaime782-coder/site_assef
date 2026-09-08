@@ -1,0 +1,123 @@
+:root {
+  --cor-dourado: #F5B324;
+  --cor-laranja: #E8722A;
+  --cor-vermelho: #C4432B;
+  --cor-texto: #2B2B2B;
+  --cor-texto-suave: #5A5A54;
+  --cor-creme: #EDE6D6;
+  --cor-fundo: #FFFFFF;
+  --cor-fundo-secao: #FAF7F2;
+  --cor-escuro: #1A1A1A;
+  --cor-borda: #E5E0D5;
+
+  --gradiente-assef: linear-gradient(90deg, var(--cor-dourado) 0%, var(--cor-laranja) 50%, var(--cor-vermelho) 100%);
+
+  --fonte-titulos: 'Space Grotesk', Arial, sans-serif;
+  --fonte-corpo: 'IBM Plex Sans', Arial, Helvetica, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--fonte-corpo);
+  color: var(--cor-texto);
+  background-color: var(--cor-fundo);
+  line-height: 1.6;
+  font-size: 16px;
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--fonte-titulos);
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+}
+
+p {
+  max-width: 65ch;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+}
+
+.container {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+.botao {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.85rem 1.75rem;
+  background: var(--cor-escuro);
+  color: #FFFFFF;
+  font-weight: 600;
+  font-size: 0.95rem;
+  border-radius: 2px;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.botao:hover {
+  background: var(--cor-vermelho);
+}
+
+.botao-contorno {
+  background: transparent;
+  border: 1.5px solid var(--cor-texto);
+  color: var(--cor-texto);
+}
+
+.botao-contorno:hover {
+  background: var(--cor-texto);
+  color: #FFFFFF;
+}
+
+.traco-assinatura {
+  height: 4px;
+  width: 56px;
+  background: var(--gradiente-assef);
+  border-radius: 2px;
+}
+
+.placeholder-imagem {
+  background: repeating-linear-gradient(
+    45deg,
+    #EDE6D6,
+    #EDE6D6 12px,
+    #E5DCC8 12px,
+    #E5DCC8 24px
+  );
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--cor-texto-suave);
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-align: center;
+  padding: 1rem;
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 0 1.25rem;
+  }
+}

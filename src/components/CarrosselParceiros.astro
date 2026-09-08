@@ -1,0 +1,88 @@
+---
+interface Parceiro {
+  nome: string
+  logotipo: { url: string; alt?: string }
+  link?: string
+}
+
+interface Props {
+  parceiros: Parceiro[]
+}
+
+const { parceiros } = Astro.props
+const lista = [...parceiros, ...parceiros]
+---
+
+{parceiros.length > 0 && (
+  <div class="carrossel-parceiros">
+    <div class="carrossel-trilho">
+      {lista.map((parceiro, i) => (
+        <div class="parceiro-item" aria-hidden={i >= parceiros.length ? 'true' : 'false'}>
+          {parceiro.link ? (
+            <a href={parceiro.link} target="_blank" rel="noopener">
+              <img src={parceiro.logotipo.url} alt={parceiro.logotipo.alt || parceiro.nome} />
+            </a>
+          ) : (
+            <img src={parceiro.logotipo.url} alt={parceiro.logotipo.alt || parceiro.nome} />
+          )}
+        </div>
+      ))}
+    </div>
+  </div>
+)}
+
+<style>
+  .carrossel-parceiros {
+    overflow: hidden;
+    position: relative;
+    -webkit-mask-image: linear-gradient(to right, transparent, black 8%, black 92%, transparent);
+    mask-image: linear-gradient(to right, transparent, black 8%, black 92%, transparent);
+  }
+
+  .carrossel-trilho {
+    display: flex;
+    align-items: center;
+    gap: 4.5rem;
+    width: max-content;
+    animation: deslizar 30s linear infinite;
+  }
+
+  .carrossel-parceiros:hover .carrossel-trilho {
+    animation-play-state: paused;
+  }
+
+  .parceiro-item {
+    flex-shrink: 0;
+    height: 60px;
+    display: flex;
+    align-items: center;
+  }
+
+  .parceiro-item img {
+    height: 100%;
+    width: auto;
+    max-width: 160px;
+    object-fit: contain;
+    filter: grayscale(100%);
+    opacity: 0.6;
+    transition: opacity 0.25s ease, filter 0.25s ease;
+  }
+
+  .parceiro-item img:hover {
+    filter: grayscale(0%);
+    opacity: 1;
+  }
+
+  @keyframes deslizar {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .carrossel-trilho {
+      animation: none;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+  }
+</style>

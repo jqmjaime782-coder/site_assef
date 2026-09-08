@@ -1,0 +1,342 @@
+---
+import Layout from '../layouts/Layout.astro'
+import CapaPagina from '../components/CapaPagina.astro'
+
+const PAYLOAD_URL = import.meta.env.PAYLOAD_URL || 'http://localhost:3000'
+
+let publicacoes: any[] = []
+let noticias: any[] = []
+
+try {
+  const [resPub, resNoticias] = await Promise.all([
+    fetch(`${PAYLOAD_URL}/api/publicacoes?limit=100&depth=1&sort=-data`),
+    fetch(`${PAYLOAD_URL}/api/noticias?limit=100&depth=1&sort=-data`),
+  ])
+  const dadosPub = await resPub.json()
+  const dadosNoticias = await resNoticias.json()
+  publicacoes = dadosPub.docs || []
+  noticias = dadosNoticias.docs || []
+} catch (erro) {
+  console.error('Erro ao ligar ao Payload:', erro)
+}
+
+function formatarData(dataISO: string): string {
+  if (!dataISO) return ''
+  const data = new Date(dataISO)
+  return data.toLocaleDateString('pt-PT', { day: '2-digit', month: 'long', year: 'numeric' })
+}
+---
+
+<Layout titulo="Publicações">
+  <CapaPagina titulo="Publicações" eyebrow="Recursos, Notícias e Eventos" />
+
+  <section class="secao-conteudo">
+    <div class="container container-estreito">
+      <div class="abas">
+        <button class="aba-botao activa" data-aba="relatorios">Relatórios</button>
+        <button class="aba-botao" data-aba="noticias">Notícias e Eventos</button>
+      </div>
+
+      <div class="aba-painel activa" data-painel="relatorios">
+        {publicacoes.length > 0 ? (
+          <div class="lista-publicacoes">
+            {publicacoes.map((pub: any) => (
+              <div class="item-publicacao">
+                <div class="item-icone">
+                  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke="currentColor" stroke-width="1.5"/>
+                    <path d="M14 2v6h6" stroke="currentColor" stroke-width="1.5"/>
+                  </svg>
+                </div>
+                <div class="item-conteudo">
+                  <p class="item-data">{formatarData(pub.data)}</p>
+                  <h3 class="item-titulo">{pub.titulo}</h3>
+                  {pub.descricao && <p class="item-descricao">{pub.descricao}</p>}
+                </div>
+                <a href={pub.ficheiro?.url} download class="item-botao" target="_blank" rel="noopener">
+                  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="item-botao-icone">
+                    <path d="M12 3v12m0 0l-4-4m4 4l4-4M4 21h16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                  Descarregar
+                </a>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p class="aviso-vazio">Os relatórios vão aparecer aqui assim que forem adicionados no painel de administração.</p>
+        )}
+      </div>
+
+      <div class="aba-painel" data-painel="noticias">
+        {noticias.length > 0 ? (
+          <div class="grelha-noticias">
+            {noticias.map((noticia: any) => (
+              <a href={`/noticias/${noticia.slug}`} class="cartao-noticia">
+                <div class="cartao-noticia-imagem placeholder-imagem">
+                  {noticia.capa ? (
+                    <img
+                      src={noticia.capa.url}
+                      alt={noticia.capa.alt || noticia.titulo}
+                      style={`object-position: ${noticia.capa.focalX ?? 50}% ${noticia.capa.focalY ?? 50}%`}
+                    />
+                  ) : (
+                    '[ imagem ]'
+                  )}
+                  <span class="cartao-noticia-etiqueta">{noticia.tipo === 'evento' ? 'Evento' : 'Notícia'}</span>
+                </div>
+                <p class="cartao-noticia-data">{formatarData(noticia.data)}</p>
+                <h3 class="cartao-noticia-titulo">{noticia.titulo}</h3>
+                <p class="cartao-noticia-resumo">{noticia.resumo}</p>
+              </a>
+            ))}
+          </div>
+        ) : (
+          <p class="aviso-vazio">As notícias e eventos vão aparecer aqui assim que forem adicionados no painel de administração.</p>
+        )}
+      </div>
+    </div>
+  </section>
+</Layout>
+
+<script>
+  const botoes = document.querySelectorAll<HTMLElement>('[data-aba]')
+  const paineis = document.querySelectorAll<HTMLElement>('[data-painel]')
+
+  botoes.forEach((botao) => {
+    botao.addEventListener('click', () => {
+      const alvo = botao.getAttribute('data-aba')
+
+      botoes.forEach((b) => b.classList.remove('activa'))
+      paineis.forEach((p) => p.classList.remove('activa'))
+
+      botao.classList.add('activa')
+      document.querySelector(`[data-painel="${alvo}"]`)?.classList.add('activa')
+    })
+  })
+</script>
+
+<style>
+  .secao-conteudo {
+    padding: 4.5rem 0;
+  }
+
+  .container-estreito {
+    max-width: 880px;
+  }
+
+  .abas {
+    display: flex;
+    gap: 0.5rem;
+    border-bottom: 1px solid var(--cor-borda);
+    margin-bottom: 2.5rem;
+  }
+
+  .aba-botao {
+    padding: 0.85rem 1.5rem;
+    background: none;
+    border: none;
+    border-bottom: 3px solid transparent;
+    font-family: var(--fonte-corpo);
+    font-weight: 600;
+    font-size: 1rem;
+    color: var(--cor-texto-suave);
+    cursor: pointer;
+    transition: color 0.2s ease;
+  }
+
+  .aba-botao:hover {
+    color: var(--cor-texto);
+  }
+
+  .aba-botao.activa {
+    color: var(--cor-vermelho);
+    border-bottom-color: var(--cor-vermelho);
+  }
+
+  .aba-painel {
+    display: none;
+  }
+
+  .aba-painel.activa {
+    display: block;
+  }
+
+  .lista-publicacoes {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .item-publicacao {
+    display: grid;
+    grid-template-columns: 56px 1fr auto;
+    align-items: center;
+    gap: 1.75rem;
+    padding: 2rem 0;
+    border-bottom: 1px solid var(--cor-borda);
+  }
+
+  .item-publicacao:first-child {
+    padding-top: 0;
+  }
+
+  .item-icone {
+    width: 56px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--cor-fundo-secao);
+    border: 1px solid var(--cor-borda);
+    color: var(--cor-vermelho);
+    flex-shrink: 0;
+  }
+
+  .item-icone svg {
+    width: 28px;
+    height: 28px;
+  }
+
+  .item-conteudo {
+    min-width: 0;
+  }
+
+  .item-data {
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--cor-texto-suave);
+    margin-bottom: 0.35rem;
+  }
+
+  .item-titulo {
+    font-size: 1.25rem;
+    margin-bottom: 0.4rem;
+  }
+
+  .item-descricao {
+    color: var(--cor-texto-suave);
+    font-size: 0.95rem;
+    line-height: 1.55;
+  }
+
+  .item-botao {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.4rem;
+    background: var(--cor-escuro);
+    color: #FFFFFF;
+    font-weight: 600;
+    font-size: 0.9rem;
+    white-space: nowrap;
+    transition: background-color 0.2s ease;
+  }
+
+  .item-botao:hover {
+    background: var(--cor-vermelho);
+    color: #FFFFFF;
+  }
+
+  .item-botao-icone {
+    width: 16px;
+    height: 16px;
+  }
+
+  .grelha-noticias {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 2.25rem;
+  }
+
+  .cartao-noticia {
+    display: block;
+  }
+
+  .cartao-noticia-imagem {
+    position: relative;
+    aspect-ratio: 4 / 3;
+    margin-bottom: 1rem;
+    font-size: 0.85rem;
+    overflow: hidden;
+  }
+
+  .cartao-noticia-imagem img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .cartao-noticia-etiqueta {
+    position: absolute;
+    top: 0.75rem;
+    left: 0.75rem;
+    background: var(--gradiente-assef);
+    color: #FFFFFF;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    padding: 0.3rem 0.7rem;
+    border-radius: 2px;
+  }
+
+  .cartao-noticia-data {
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--cor-texto-suave);
+    margin-bottom: 0.4rem;
+  }
+
+  .cartao-noticia-titulo {
+    font-size: 1.15rem;
+    margin-bottom: 0.5rem;
+    color: var(--cor-texto);
+  }
+
+  .cartao-noticia-resumo {
+    color: var(--cor-texto-suave);
+    font-size: 0.92rem;
+    line-height: 1.55;
+  }
+
+  .aviso-vazio {
+    color: var(--cor-texto-suave);
+    font-style: italic;
+  }
+
+  @media (max-width: 700px) {
+    .item-publicacao {
+      grid-template-columns: 44px 1fr;
+      row-gap: 1rem;
+    }
+
+    .item-icone {
+      width: 44px;
+      height: 44px;
+    }
+
+    .item-icone svg {
+      width: 22px;
+      height: 22px;
+    }
+
+    .item-botao {
+      grid-column: 1 / -1;
+      justify-content: center;
+    }
+
+    .abas {
+      gap: 0;
+    }
+
+    .aba-botao {
+      flex: 1;
+      padding: 0.85rem 0.5rem;
+      font-size: 0.9rem;
+      text-align: center;
+    }
+  }
+</style>

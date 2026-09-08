@@ -1,0 +1,100 @@
+---
+interface Props {
+  titulo: string
+  eyebrow?: string
+  imagem?: {
+    url: string
+    alt?: string
+    focalX?: number
+    focalY?: number
+  } | null
+}
+
+const { titulo, eyebrow = 'ASSEF', imagem = null } = Astro.props
+---
+
+<section class="capa-pagina">
+  {imagem ? (
+    <img
+      src={imagem.url}
+      alt={imagem.alt || titulo}
+      class="capa-imagem"
+      style={`object-position: ${imagem.focalX ?? 50}% ${imagem.focalY ?? 50}%`}
+    />
+  ) : (
+    <div class="capa-imagem placeholder-imagem">
+      [ BANNER — foto a substituir depois ]
+    </div>
+  )}
+  <div class="capa-degrade"></div>
+  <div class="capa-conteudo container">
+    <p class="capa-eyebrow">{eyebrow}</p>
+    <h1>{titulo}</h1>
+    <div class="capa-linha"></div>
+  </div>
+</section>
+
+<style>
+  .capa-pagina {
+    position: relative;
+    height: 42vh;
+    min-height: 320px;
+    overflow: hidden;
+    display: flex;
+    align-items: flex-end;
+  }
+
+  .capa-imagem {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    font-size: 1rem;
+  }
+
+  .capa-degrade {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      to top,
+      rgba(196, 67, 43, 0.75) 0%,
+      rgba(15, 12, 10, 0.55) 40%,
+      rgba(15, 12, 10, 0.15) 100%
+    );
+    mix-blend-mode: multiply;
+  }
+
+  .capa-conteudo {
+    position: relative;
+    z-index: 1;
+    padding-bottom: 3rem;
+  }
+
+  .capa-eyebrow {
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: #FFFFFF;
+    margin-bottom: 0.5rem;
+  }
+
+  .capa-conteudo h1 {
+    font-size: 2.75rem;
+    color: #FFFFFF;
+    line-height: 1.1;
+  }
+
+  .capa-linha {
+    height: 4px;
+    width: 80px;
+    background: var(--gradiente-assef);
+    border-radius: 2px;
+    margin-top: 1.25rem;
+  }
+
+  @media (max-width: 700px) {
+    .capa-conteudo h1 {
+      font-size: 2rem;
+    }
+  }
+</style>

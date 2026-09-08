@@ -1,17 +1,692 @@
 ---
+import Layout from '../layouts/Layout.astro'
+import CarrosselParceiros from '../components/CarrosselParceiros.astro'
+import IconeImpacto from '../components/IconeImpacto.astro'
 
+const PAYLOAD_URL = import.meta.env.PAYLOAD_URL || 'http://localhost:3000'
+
+let configuracoes = null
+let impacto = null
+let areas = []
+let hero = null
+let parceiros: any[] = []
+let noticias: any[] = []
+let chamadaAccao: any = null
+
+try {
+  const [resConfig, resImpacto, resAreas, resHero, resParceiros, resNoticias, resCTA] = await Promise.all([
+    fetch(`${PAYLOAD_URL}/api/globals/configuracoes`),
+    fetch(`${PAYLOAD_URL}/api/globals/impacto`),
+    fetch(`${PAYLOAD_URL}/api/areas-actuacao?limit=6&depth=1`),
+    fetch(`${PAYLOAD_URL}/api/globals/hero?depth=1`),
+    fetch(`${PAYLOAD_URL}/api/parceiros?limit=50&depth=1&sort=ordem`),
+    fetch(`${PAYLOAD_URL}/api/noticias?limit=3&depth=1&sort=-data`),
+    fetch(`${PAYLOAD_URL}/api/globals/chamada-accao`),
+  ])
+  configuracoes = await resConfig.json()
+  impacto = await resImpacto.json()
+  const dadosAreas = await resAreas.json()
+  areas = dadosAreas.docs || []
+  hero = await resHero.json()
+  const dadosParceiros = await resParceiros.json()
+  parceiros = dadosParceiros.docs || []
+  const dadosNoticias = await resNoticias.json()
+  noticias = dadosNoticias.docs || []
+  chamadaAccao = await resCTA.json()
+} catch (erro) {
+  console.error('Erro ao ligar ao Payload:', erro)
+}
+
+const mostrarImpacto = configuracoes?.paginasActivas?.mostrarImpacto !== false
+const estatisticas = impacto?.estatisticas || []
+const impactoEyebrow = impacto?.eyebrow || 'O Nosso Impacto'
+const impactoTitulo = impacto?.titulo || 'Resultados que transformam vidas'
+
+const heroModo = hero?.modo || 'carrossel'
+const heroEyebrow = hero?.eyebrow || 'ASSEF'
+const heroBotaoTexto = hero?.botaoTexto || 'Conhecer o nosso trabalho'
+const heroBotaoLink = hero?.botaoLink || '/sobre'
+
+const slides = (hero?.slidesCarrossel || []).filter((s: any) => s.imagem)
+
+const heroVideo = hero?.video || null
+const videoTitulo = hero?.videoTitulo || ''
+const videoTexto = hero?.videoTexto || ''
+
+const ctaTitulo = chamadaAccao?.titulo || 'Junte-se a nós nesta causa'
+const ctaTexto = chamadaAccao?.texto || ''
+const ctaBotaoTexto = chamadaAccao?.botaoTexto || 'Fale Connosco'
+const ctaBotaoLink = chamadaAccao?.botaoLink || '/contactos'
+
+function formatarData(dataISO: string): string {
+  if (!dataISO) return ''
+  const data = new Date(dataISO)
+  return data.toLocaleDateString('pt-PT', { day: '2-digit', month: 'long', year: 'numeric' })
+}
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
-	</head>
-	<body>
-		<h1>Astro</h1>
-	</body>
-</html>
+<Layout titulo="Início">
+  <section class="hero">
+    {heroModo === 'video' && heroVideo ? (
+      <div class="hero-slide activo">
+        <video class="hero-media" src={heroVideo.url} autoplay muted loop playsinline></video>
+        <div class="hero-degrade"></div>
+        <div class="hero-texto-caixa">
+          <p class="hero-eyebrow">{heroEyebrow}</p>
+          <h1>{videoTitulo}</h1>
+          <div class="hero-linha"></div>
+          <p class="hero-texto">{videoTexto}</p>
+          <a href={heroBotaoLink} class="botao hero-botao">{heroBotaoTexto}</a>
+        </div>
+      </div>
+    ) : slides.length > 0 ? (
+      slides.map((slide: any, i: number) => (
+        <div class={`hero-slide ${i === 0 ? 'activo' : ''}`} data-hero-slide>
+          <img
+            src={slide.imagem.url}
+            alt={slide.imagem.alt || slide.titulo}
+            class="hero-media"
+            style={`object-position: ${slide.imagem.focalX ?? 50}% ${slide.imagem.focalY ?? 50}%`}
+          />
+          <div class="hero-degrade"></div>
+          <div class="hero-texto-caixa">
+            <p class="hero-eyebrow">{heroEyebrow}</p>
+            <h1>{slide.titulo}</h1>
+            <div class="hero-linha"></div>
+            <p class="hero-texto">{slide.texto}</p>
+            <a href={heroBotaoLink} class="botao hero-botao">{heroBotaoTexto}</a>
+          </div>
+        </div>
+      ))
+    ) : (
+      <div class="hero-slide activo">
+        <div class="placeholder-imagem hero-media">
+          [ BANNER — foto de comunidade/campo a substituir depois ]
+        </div>
+        <div class="hero-degrade"></div>
+        <div class="hero-texto-caixa">
+          <p class="hero-eyebrow">{heroEyebrow}</p>
+          <h1>Esperança que se transforma em futuro</h1>
+          <div class="hero-linha"></div>
+          <a href={heroBotaoLink} class="botao hero-botao">{heroBotaoTexto}</a>
+        </div>
+      </div>
+    )}
+  </section>
+
+  {mostrarImpacto && estatisticas.length > 0 && (
+    <section class="faixa-impacto">
+      <div class="container">
+        <p class="impacto-eyebrow">
+          <span class="traco-assinatura"></span>
+          {impactoEyebrow}
+        </p>
+        <h2 class="impacto-titulo">{impactoTitulo}</h2>
+
+        <div class="faixa-impacto-grelha">
+          {estatisticas.map((item: any) => (
+            <div class="estatistica">
+              <div class="estatistica-icone">
+                <IconeImpacto tipo={item.icone} />
+              </div>
+              <p class="estatistica-numero" data-contador={item.numero}>0</p>
+              <p class="estatistica-descricao">{item.descricao}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  )}
+
+  <section class="secao-areas">
+    <div class="container">
+      <p class="secao-eyebrow">
+        <span class="traco-assinatura"></span>
+        O que fazemos
+      </p>
+      <h2>Áreas de Actuação</h2>
+
+      {areas.length > 0 ? (
+        <div class="grelha-areas">
+          {areas.map((area: any) => (
+            <a href={`/areas/${area.slug}`} class="cartao-area">
+              <div class="cartao-area-imagem placeholder-imagem">
+                {area.icone ? (
+                  <img
+                    src={area.icone.url}
+                    alt={area.icone.alt || area.nome}
+                    style={`object-position: ${area.icone.focalX ?? 50}% ${area.icone.focalY ?? 50}%`}
+                  />
+                ) : (
+                  '[ imagem ]'
+                )}
+              </div>
+              <h3>{area.nome}</h3>
+              <p>{area.descricaoCurta}</p>
+            </a>
+          ))}
+        </div>
+      ) : (
+        <p class="aviso-vazio">As áreas de actuação vão aparecer aqui assim que forem adicionadas no painel de administração.</p>
+      )}
+    </div>
+  </section>
+
+  {noticias.length > 0 && (
+    <section class="secao-noticias">
+      <div class="container">
+        <div class="noticias-cabecalho">
+          <div>
+            <p class="secao-eyebrow">
+              <span class="traco-assinatura"></span>
+              Fica a par
+            </p>
+            <h2>Últimas Notícias</h2>
+          </div>
+          <a href="/publicacoes" class="link-ver-todas">Ver todas →</a>
+        </div>
+
+        <div class="grelha-noticias-home">
+          {noticias.map((noticia: any) => (
+            <a href={`/noticias/${noticia.slug}`} class="cartao-noticia-home">
+              <div class="cartao-noticia-home-imagem placeholder-imagem">
+                {noticia.capa ? (
+                  <img
+                    src={noticia.capa.url}
+                    alt={noticia.capa.alt || noticia.titulo}
+                    style={`object-position: ${noticia.capa.focalX ?? 50}% ${noticia.capa.focalY ?? 50}%`}
+                  />
+                ) : (
+                  '[ imagem ]'
+                )}
+                <span class="cartao-noticia-home-etiqueta">{noticia.tipo === 'evento' ? 'Evento' : 'Notícia'}</span>
+              </div>
+              <p class="cartao-noticia-home-data">{formatarData(noticia.data)}</p>
+              <h3 class="cartao-noticia-home-titulo">{noticia.titulo}</h3>
+            </a>
+          ))}
+        </div>
+      </div>
+    </section>
+  )}
+
+  {parceiros.length > 0 && (
+    <section class="secao-parceiros">
+      <div class="container">
+        <p class="secao-eyebrow secao-eyebrow-centro">
+          <span class="traco-assinatura"></span>
+          Trabalhamos com
+        </p>
+        <h2 class="titulo-parceiros">Os Nossos Parceiros</h2>
+      </div>
+      <div class="container-largo">
+        <CarrosselParceiros parceiros={parceiros} />
+      </div>
+    </section>
+  )}
+
+  <section class="faixa-cta">
+    <div class="container faixa-cta-conteudo">
+      <h2>{ctaTitulo}</h2>
+      <p>{ctaTexto}</p>
+      <a href={ctaBotaoLink} class="botao botao-cta">{ctaBotaoTexto}</a>
+    </div>
+  </section>
+</Layout>
+
+<script>
+  const slides = document.querySelectorAll<HTMLElement>('[data-hero-slide]')
+  if (slides.length > 1) {
+    let indiceActual = 0
+    setInterval(() => {
+      slides[indiceActual].classList.remove('activo')
+      indiceActual = (indiceActual + 1) % slides.length
+      slides[indiceActual].classList.add('activo')
+    }, 6000)
+  }
+
+  const contadores = document.querySelectorAll<HTMLElement>('[data-contador]')
+
+  function animarContador(elemento: HTMLElement) {
+    const textoCompleto = elemento.getAttribute('data-contador') || ''
+    const correspondencia = textoCompleto.match(/\d+/)
+
+    if (!correspondencia) {
+      elemento.textContent = textoCompleto
+      return
+    }
+
+    const numeroFinal = parseInt(correspondencia[0], 10)
+    const prefixo = textoCompleto.slice(0, correspondencia.index)
+    const sufixo = textoCompleto.slice((correspondencia.index || 0) + correspondencia[0].length)
+
+    const duracao = 1600
+    const inicio = performance.now()
+
+    function passo(agora: number) {
+      const progresso = Math.min((agora - inicio) / duracao, 1)
+      const facilitado = 1 - Math.pow(1 - progresso, 3)
+      const valorActual = Math.floor(facilitado * numeroFinal)
+      elemento.textContent = `${prefixo}${valorActual}${sufixo}`
+
+      if (progresso < 1) {
+        requestAnimationFrame(passo)
+      } else {
+        elemento.textContent = textoCompleto
+      }
+    }
+
+    requestAnimationFrame(passo)
+  }
+
+  if (contadores.length > 0) {
+    const observador = new IntersectionObserver(
+      (entradas) => {
+        entradas.forEach((entrada) => {
+          if (entrada.isIntersecting) {
+            animarContador(entrada.target as HTMLElement)
+            observador.unobserve(entrada.target)
+          }
+        })
+      },
+      { threshold: 0.4 }
+    )
+
+    contadores.forEach((contador) => observador.observe(contador))
+  }
+</script>
+
+<style>
+  .hero {
+    position: relative;
+    height: 82vh;
+    min-height: 560px;
+    overflow: hidden;
+  }
+
+  .hero-slide {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transition: opacity 1.2s ease;
+    z-index: 0;
+  }
+
+  .hero-slide.activo {
+    opacity: 1;
+    z-index: 1;
+  }
+
+  .hero-media {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    font-size: 1.1rem;
+  }
+
+  .hero-degrade {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      to top,
+      rgba(196, 67, 43, 0.75) 0%,
+      rgba(196, 67, 43, 0.25) 45%,
+      rgba(196, 67, 43, 0.05) 70%
+    );
+    mix-blend-mode: multiply;
+  }
+
+  .hero-degrade::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      to top,
+      rgba(15, 12, 10, 0.55) 0%,
+      rgba(15, 12, 10, 0) 55%
+    );
+  }
+
+  .hero-texto-caixa {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    max-width: 680px;
+    padding: 3.5rem;
+    color: #FFFFFF;
+  }
+
+  .hero-eyebrow,
+  .hero-linha,
+  .hero-texto-caixa h1,
+  .hero-texto,
+  .hero-botao {
+    opacity: 0;
+    transform: translateY(-18px);
+    transition: opacity 0.7s ease, transform 0.7s ease;
+  }
+
+  .hero-eyebrow { transition-delay: 0.2s; }
+  .hero-texto-caixa h1 { transition-delay: 0.4s; }
+  .hero-linha { transition-delay: 0.65s; }
+  .hero-texto { transition-delay: 0.85s; }
+  .hero-botao { transition-delay: 1.05s; }
+
+  .hero-slide.activo .hero-eyebrow,
+  .hero-slide.activo .hero-linha,
+  .hero-slide.activo .hero-texto-caixa h1,
+  .hero-slide.activo .hero-texto,
+  .hero-slide.activo .hero-botao {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .hero-eyebrow {
+    font-weight: 700;
+    font-size: 1.05rem;
+    letter-spacing: 0.02em;
+    color: #FFFFFF;
+    margin-bottom: 0.75rem;
+  }
+
+  .hero-texto-caixa h1 {
+    font-size: 3.25rem;
+    line-height: 1.08;
+    color: #FFFFFF;
+    margin-bottom: 0;
+  }
+
+  .hero-linha {
+    height: 4px;
+    width: 90px;
+    background: var(--gradiente-assef);
+    border-radius: 2px;
+    margin: 1.25rem 0 1.5rem 0;
+  }
+
+  .hero-texto {
+    font-size: 1.2rem;
+    line-height: 1.55;
+    color: rgba(255, 255, 255, 0.92);
+    margin-bottom: 1.75rem;
+    max-width: 54ch;
+  }
+
+  .hero-botao {
+    font-size: 1rem;
+    padding: 1rem 2rem;
+  }
+
+  .faixa-impacto {
+    background: var(--cor-escuro);
+    padding: 4.5rem 0;
+    margin-top: 3rem;
+  }
+
+  .impacto-eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-weight: 700;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--cor-dourado);
+    margin-bottom: 0.75rem;
+  }
+
+  .impacto-titulo {
+    font-size: 1.9rem;
+    color: #FFFFFF;
+    max-width: 32ch;
+    margin-bottom: 3rem;
+  }
+
+  .faixa-impacto-grelha {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 2rem;
+    text-align: center;
+  }
+
+  .estatistica-icone {
+    width: 60px;
+    height: 60px;
+    margin: 0 auto 1.1rem auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 14px;
+    background: var(--gradiente-assef);
+    color: #FFFFFF;
+  }
+
+  .estatistica-icone svg {
+    width: 28px;
+    height: 28px;
+  }
+
+  .estatistica-numero {
+    font-family: var(--fonte-titulos);
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #FFFFFF;
+    min-height: 1.2em;
+  }
+
+  .estatistica-descricao {
+    color: var(--cor-creme);
+    font-size: 0.9rem;
+    margin-top: 0.4rem;
+  }
+
+  .secao-areas {
+    padding: 5rem 0;
+  }
+
+  .secao-eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: var(--cor-texto-suave);
+    margin-bottom: 0.75rem;
+  }
+
+  .secao-eyebrow-centro {
+    justify-content: center;
+  }
+
+  .secao-areas h2 {
+    font-size: 2rem;
+    margin-bottom: 2.5rem;
+  }
+
+  .grelha-areas {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 2.5rem;
+  }
+
+  .cartao-area {
+    display: block;
+  }
+
+  .cartao-area-imagem {
+    aspect-ratio: 4 / 3;
+    margin-bottom: 1.25rem;
+    font-size: 0.85rem;
+    overflow: hidden;
+  }
+
+  .cartao-area-imagem img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .cartao-area h3 {
+    font-size: 1.2rem;
+    margin-bottom: 0.5rem;
+    color: var(--cor-texto);
+  }
+
+  .cartao-area p {
+    color: var(--cor-texto-suave);
+    font-size: 0.95rem;
+  }
+
+  .aviso-vazio {
+    color: var(--cor-texto-suave);
+    font-style: italic;
+  }
+
+  .secao-noticias {
+    padding: 5rem 0;
+    background: var(--cor-fundo-secao);
+  }
+
+  .noticias-cabecalho {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 2.5rem;
+    gap: 1.5rem;
+  }
+
+  .noticias-cabecalho h2 {
+    font-size: 2rem;
+  }
+
+  .link-ver-todas {
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: var(--cor-vermelho);
+    white-space: nowrap;
+  }
+
+  .grelha-noticias-home {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 2.25rem;
+  }
+
+  .cartao-noticia-home {
+    display: block;
+  }
+
+  .cartao-noticia-home-imagem {
+    position: relative;
+    aspect-ratio: 4 / 3;
+    margin-bottom: 1rem;
+    font-size: 0.85rem;
+    overflow: hidden;
+  }
+
+  .cartao-noticia-home-imagem img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .cartao-noticia-home-etiqueta {
+    position: absolute;
+    top: 0.75rem;
+    left: 0.75rem;
+    background: var(--gradiente-assef);
+    color: #FFFFFF;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    padding: 0.3rem 0.7rem;
+    border-radius: 2px;
+  }
+
+  .cartao-noticia-home-data {
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--cor-texto-suave);
+    margin-bottom: 0.4rem;
+  }
+
+  .cartao-noticia-home-titulo {
+    font-size: 1.15rem;
+    color: var(--cor-texto);
+  }
+
+  .secao-parceiros {
+    padding: 4.5rem 0 5rem 0;
+    background: var(--cor-fundo);
+    text-align: center;
+  }
+
+  .titulo-parceiros {
+    font-size: 1.75rem;
+    margin-bottom: 2.5rem;
+  }
+
+  .container-largo {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+  }
+
+  .faixa-cta {
+    background: var(--gradiente-assef);
+    padding: 4.5rem 0;
+  }
+
+  .faixa-cta-conteudo {
+    text-align: center;
+    max-width: 640px;
+  }
+
+  .faixa-cta h2 {
+    font-size: 2rem;
+    color: #FFFFFF;
+    margin-bottom: 1rem;
+  }
+
+  .faixa-cta p {
+    color: rgba(255, 255, 255, 0.92);
+    margin: 0 auto 2rem auto;
+    max-width: 50ch;
+  }
+
+  .botao-cta {
+    background: var(--cor-escuro);
+  }
+
+  .botao-cta:hover {
+    background: #000000;
+  }
+
+  @media (max-width: 700px) {
+    .hero-texto-caixa {
+      padding: 1.75rem;
+      max-width: 100%;
+    }
+
+    .hero-texto-caixa h1 {
+      font-size: 2rem;
+    }
+
+    .hero-texto {
+      font-size: 1.05rem;
+    }
+
+    .impacto-titulo {
+      font-size: 1.5rem;
+    }
+
+    .noticias-cabecalho {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.75rem;
+    }
+  }
+</style>

@@ -29,6 +29,15 @@ export default buildConfig({
     importMap: {
       baseDir: path.resolve(dirname),
     },
+    components: {
+      graphics: {
+        Logo: '/components/Logo#Logo',
+        Icon: '/components/Logo#Icon',
+      },
+    },
+    meta: {
+      titleSuffix: '- ASSEF',
+    },
   },
   collections: [Users, Media, AreasActuacao, Equipa, Publicacoes, Noticias, Parceiros],
   globals: [Configuracoes, SobreNos, Impacto, Hero, ChamadaAccao, Faq],

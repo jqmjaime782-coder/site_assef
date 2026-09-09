@@ -1,4 +1,5 @@
 ---
+export const prerender = false
 import Layout from '../layouts/Layout.astro'
 import CapaPagina from '../components/CapaPagina.astro'
 
@@ -44,8 +45,8 @@ function formatarData(dataISO: string): string {
               <div class="item-publicacao">
                 <div class="item-icone">
                   <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke="currentColor" stroke-width="1.5"/>
-                    <path d="M14 2v6h6" stroke="currentColor" stroke-width="1.5"/>
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke="currentColor" stroke-width="1.5"></path>
+                    <path d="M14 2v6h6" stroke="currentColor" stroke-width="1.5"></path>
                   </svg>
                 </div>
                 <div class="item-conteudo">
@@ -55,7 +56,7 @@ function formatarData(dataISO: string): string {
                 </div>
                 <a href={pub.ficheiro?.url} download class="item-botao" target="_blank" rel="noopener">
                   <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="item-botao-icone">
-                    <path d="M12 3v12m0 0l-4-4m4 4l4-4M4 21h16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M12 3v12m0 0l-4-4m4 4l4-4M4 21h16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
                   </svg>
                   Descarregar
                 </a>

@@ -69,6 +69,7 @@ export default buildConfig({
         region: 'auto',
         endpoint: process.env.R2_ENDPOINT || '',
       },
+      clientUploads: true,
     }),
   ],
 })

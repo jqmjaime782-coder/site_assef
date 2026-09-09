@@ -70,7 +70,7 @@ export default buildConfig({
         endpoint: process.env.R2_ENDPOINT || '',
         forcePathStyle: true,
       },
-      clientUploads: true,
+      clientUploads: false,
     }),
   ],
 })
